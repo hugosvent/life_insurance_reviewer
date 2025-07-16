@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Life Insurance Policy Review AI</title>
+    <!-- <link rel="icon" type="image/x-icon" href="your-logo.png"> -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9107502632575040"
+        crossorigin="anonymous"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F9F9F7;
+            color: #383838;
+        }
+
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Fixed height thought process container with scrolling */
+        .thought-content-fixed {
+            height: 200px;
+            max-height: 200px;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+
+        /* Add responsive adjustments */
+        @media (max-width: 640px) {
+            .mobile-py-2 {
+                padding-top: 0.5rem;
+                padding-bottom: 0.5rem;
+            }
+
+            .mobile-px-3 {
+                padding-left: 0.75rem;
+                padding-right: 0.75rem;
+            }
+
+            .mobile-text-sm {
+                font-size: 0.875rem;
+                line-height: 1.25rem;
+            }
+
+            .mobile-text-xs {
+                font-size: 0.75rem;
+                line-height: 1rem;
+            }
+        }
+
+        /* File upload styles */
+        .file-item {
+            transition: all 0.3s ease;
+        }
+
+        .file-item:hover {
+            background-color: #f3f4f6;
+        }
+
+        /* Fix for long filename overflow */
+        .file-display-container {
+            max-width: 100%;
+            overflow: hidden;
+        }
+
+        .file-name-text {
+            max-width: calc(100% - 2rem);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            word-break: break-all;
+        }
+
+        /* Ensure the file display boxes don't overflow */
+        .comparison-file-display {
+            max-width: 100%;
+            overflow: hidden;
+            word-wrap: break-word;
+        }
+
+        /* Tab styles for mode selection */
+        .mode-tab {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mode-tab::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .mode-tab:hover::before {
+            left: 100%;
+        }
+
+        .mode-tab.active {
+            background: linear-gradient(135deg, #A37F64, #8F6A53);
+            color: white;
+            box-shadow: 0 2px 8px rgba(163, 127, 100, 0.3);
+        }
+
+        .mode-tab.inactive {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .mode-tab.inactive:hover {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        /* Smooth transition for tab content */
+        .tab-transition {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background-color: white !important;
+                color: black !important;
+                font-size: 12pt;
+                line-height: 1.4;
+            }
+
+            /* Hide unnecessary elements when printing */
+            header,
+            footer,
+            .print\:hidden {
+                display: none !important;
+            }
+
+            /* Ensure analysis view is visible and properly formatted */
+            #analysis-view {
+                display: block !important;
+                box-shadow: none !important;
+                border: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                background: white !important;
+            }
+
+            /* Style the content for print */
+            #multi-model-results {
+                font-size: 11pt !important;
+                color: black !important;
+            }
+
+            /* Ensure tables and content break properly */
+            table {
+                page-break-inside: avoid;
+            }
+
+            h1,
+            h2,
+            h3,
+            h4,
+            h5,
+            h6 {
+                page-break-after: avoid;
+                color: black !important;
+            }
+
+            /* Add page breaks for long content */
+            .page-break {
+                page-break-before: always;
+            }
+        }
+
+        /* Floating Print Button Styles */
+        #floating-print-btn {
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        #floating-print-btn:hover {
+            box-shadow: 0 8px 25px rgba(163, 127, 100, 0.4);
+        }
+
+        #floating-print-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Floating button animation */
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-3px);
+            }
+        }
+
+        #floating-print-btn.animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        /* Responsive adjustments for floating button */
+        @media (max-width: 640px) {
+            #floating-print-btn {
+                bottom: 1rem;
+                right: 1rem;
+                width: 3rem;
+                height: 3rem;
+            }
+
+            #floating-print-btn svg {
+                width: 1.25rem;
+                height: 1.25rem;
+            }
+        }
+
+        /* Ensure floating button appears above other content */
+        #floating-print-btn {
+            z-index: 1000;
+        }
+
+        /* Hide floating button in print mode */
+        @media print {
+            #floating-print-btn {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body class="antialiased flex flex-col min-h-screen">
+    <!-- Header with logo in top left -->
+    <header class="bg-white shadow-sm py-3 px-4">
+        <div class="container mx-auto">
+            <div class="flex items-center">
+                <a href="https://expertition360.com" target="_blank" rel="noopener noreferrer">
+                    <div class="flex flex-col items-start">
+                        <p class="text-sm text-gray-600 mb-1">A product by</p>
+                        <img src="expertition360_light.png" alt="Expertition360 Logo" class="h-12 object-contain">
+                    </div>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main content area -->
+    <main class="container mx-auto flex-grow px-3 sm:px-4 py-4 sm:py-8">
+        <!-- Upload View -->
+        <div id="upload-view"
+            class="flex flex-col items-center justify-center min-h-[50vh] sm:min-h-[60vh] bg-gray-50 rounded-lg shadow-inner p-4 sm:p-6">
+            <div class="flex items-center space-x-3">
+                <h1 class="text-lg sm:text-3xl font-bold text-[#A37F64]">
+                    Life Insurance Policy Analyzer
+                </h1>
+            </div>
+
+            <h2 class="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-800 mb-3 sm:mb-4 text-center">Understand
+                Your Life Insurance Policy, Instantly.</h2>
+            <p class="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6 max-w-xl text-center">
+                Upload your life insurance policy document(s) (PDF) to get analysis or comparison.
+            </p>
+
+            <!-- Mode Selection with Tab Design -->
+            <div class="mb-6 w-full max-w-md">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="flex">
+                        <button id="single-mode-tab"
+                            class="flex-1 py-3 px-4 text-sm font-medium transition-all duration-300 bg-[#A37F64] text-white border-r border-gray-200">
+                            <div class="flex items-center justify-center space-x-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                    </path>
+                                </svg>
+                                <span>Single Analysis</span>
+                            </div>
+                        </button>
+                        <button id="compare-mode-tab"
+                            class="flex-1 py-3 px-4 text-sm font-medium transition-all duration-300 bg-gray-100 text-gray-600 hover:bg-gray-200">
+                            <div class="flex items-center justify-center space-x-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 002 2m0 0v10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2z">
+                                    </path>
+                                </svg>
+                                <span>Compare Policies</span>
+                            </div>
+                        </button>
+                    </div>
+                    <div class="px-4 py-2 bg-gray-50 border-t border-gray-100">
+                        <p id="mode-description" class="text-xs text-gray-600 text-center">
+                            Analyze a single insurance policy in detail
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Language Selection -->
+            <div class="mb-4 w-full max-w-xs">
+                <label for="language-select" class="block text-sm font-medium text-gray-700 mb-1">Select
+                    Language:</label>
+                <select id="language-select"
+                    class="w-full p-2 border border-gray-300 rounded-md focus:ring-[#A37F64] focus:border-[#A37F64]">
+                    <option value="en">English</option>
+                    <option value="id">Bahasa Indonesia</option>
+                    <option value="zh">Chinese (中文)</option>
+                    <option value="es">Spanish (Español)</option>
+                    <option value="fr">French (Français)</option>
+                    <option value="de">German (Deutsch)</option>
+                    <option value="ja">Japanese (日本語)</option>
+                    <option value="ko">Korean (한국어)</option>
+                </select>
+                <p class="mt-1 text-xs text-gray-500">Selecting the correct language will improve analysis accuracy.</p>
+            </div>
+
+            <!-- File Upload Section -->
+            <div class="w-full max-w-4xl">
+                <!-- Single Policy Mode -->
+                <div id="single-upload-section" class="w-full max-w-md mx-auto">
+                    <label for="file-upload"
+                        class="cursor-pointer bg-[#A37F64] hover:bg-[#8F6A53] text-white font-bold py-2 px-4 sm:px-5 rounded-xl shadow-lg transition duration-300 ease-in-out transform hover:scale-105 text-sm block text-center">
+                        <span id="upload-button-text">Upload Your Policy</span>
+                    </label>
+                    <input id="file-upload" type="file" accept=".pdf" class="hidden">
+
+                    <!-- Selected Files Display -->
+                    <div id="selected-files-container" class="mt-3 space-y-2 hidden">
+                        <p class="text-sm font-medium text-gray-700">Selected Files:</p>
+                        <div id="selected-files-list" class="space-y-1"></div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div id="action-buttons" class="mt-4 space-y-2 hidden">
+                        <button id="analyze-button"
+                            class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-xl transition duration-300">
+                            <span id="analyze-button-text">Analyze Policy</span>
+                        </button>
+                        <button id="clear-files-button"
+                            class="w-full bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-xl transition duration-300">
+                            Clear All Files
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Comparison Mode - Side by Side Uploads -->
+                <div id="comparison-upload-section" class="hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+                        <!-- Policy 1 Upload -->
+                        <div class="bg-white p-4 rounded-lg border-2 border-dashed border-gray-300 hover:border-[#A37F64] transition-colors">
+                            <div class="text-center">
+                                <div class="mb-3">
+                                    <svg class="mx-auto h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                    </svg>
+                                </div>
+                                <h3 class="text-lg font-medium text-gray-900 mb-2">Policy 1</h3>
+                                <label for="file-upload-1" class="cursor-pointer bg-[#A37F64] hover:bg-[#8F6A53] text-white font-bold py-2 px-4 rounded-xl shadow-lg transition duration-300 ease-in-out transform hover:scale-105 text-sm">
+                                    Choose File
+                                </label>
+                                <input id="file-upload-1" type="file" accept=".pdf" class="hidden">
+                                <div id="file-1-display" class="mt-3 hidden">
+                                    <div class="bg-gray-100 p-2 rounded border file-display-container comparison-file-display">
+                                        <div class="flex items-center justify-between">
+                                            <span id="file-1-name" class="text-sm text-gray-700 file-name-text" title=""></span>
+                                            <button id="remove-file-1" class="ml-2 text-red-500 hover:text-red-700 text-sm flex-shrink-0">✕</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Policy 2 Upload -->
+                        <div class="bg-white p-4 rounded-lg border-2 border-dashed border-gray-300 hover:border-[#A37F64] transition-colors">
+                            <div class="text-center">
+                                <div class="mb-3">
+                                    <svg class="mx-auto h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                    </svg>
+                                </div>
+                                <h3 class="text-lg font-medium text-gray-900 mb-2">Policy 2</h3>
+                                <label for="file-upload-2" class="cursor-pointer bg-[#A37F64] hover:bg-[#8F6A53] text-white font-bold py-2 px-4 rounded-xl shadow-lg transition duration-300 ease-in-out transform hover:scale-105 text-sm">
+                                    Choose File
+                                </label>
+                                <input id="file-upload-2" type="file" accept=".pdf" class="hidden">
+                                <div id="file-2-display" class="mt-3 hidden">
+                                    <div class="bg-gray-100 p-2 rounded border file-display-container comparison-file-display">
+                                        <div class="flex items-center justify-between">
+                                            <span id="file-2-name" class="text-sm text-gray-700 file-name-text" title=""></span>
+                                            <button id="remove-file-2" class="ml-2 text-red-500 hover:text-red-700 text-sm flex-shrink-0">✕</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Comparison Action Buttons -->
+                    <div id="comparison-action-buttons" class="mt-6 max-w-md mx-auto space-y-2 hidden">
+                        <button id="compare-button"
+                            class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-xl transition duration-300">
+                            Compare Policies
+                        </button>
+                        <button id="clear-comparison-files-button"
+                            class="w-full bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-xl transition duration-300">
+                            Clear All Files
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Processing View (Hidden by default) -->
+        <div id="processing-view"
+            class="hidden flex-col items-center justify-center min-h-[50vh] sm:min-h-[60vh] bg-gray-50 rounded-lg shadow-inner p-4 sm:p-6">
+            <div class="animate-spin rounded-full h-12 w-12 sm:h-14 sm:w-14 border-t-4 border-b-4 border-[#A37F64]">
+            </div>
+            <p class="mt-4 sm:mt-5 text-base sm:text-lg font-medium text-gray-700 text-center">Analyzing your life
+                insurance policy... <strong>Please keep this screen on!</strong></p>
+            <p id="processing-message" class="mt-1 text-xs sm:text-sm text-gray-500 text-center">This may take a moment
+                as our AI reads through the document.</p>
+        </div>
+
+        <!-- Analysis View (Hidden by default) -->
+        <div id="analysis-view" class="hidden bg-white p-4 sm:p-6 rounded-lg shadow-lg">
+            <h2 class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 mb-3 sm:mb-5 text-center">Your Life
+                Insurance Policy Insights</h2>
+
+            <div class="flex justify-between items-center border-b border-gray-200 mb-3 sm:mb-4">
+                <div class="flex justify-center flex-1">
+                    <button id="overview-tab-btn"
+                        class="px-3 sm:px-5 py-2 text-sm sm:text-base font-medium rounded-t-lg transition duration-300 text-[#A37F64] border-b-2 border-[#A37F64]">
+                        <span id="overview-tab-text">Overview</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="overview-content" class="overview-content">
+                <div id="multi-model-results" class="text-xs sm:text-sm">
+                    <p class="text-center text-gray-500">No policy content available. Please upload a policy to see the
+                        analysis.</p>
+                </div>
+                <!-- Raw File Content for Debugging -->
+                <div id="raw-file-content-container"
+                    class="hidden bg-gray-100 p-2 sm:p-3 rounded-lg my-2 sm:my-3 border border-gray-200 print:hidden">
+                    <details class="bg-gray-100 p-2 rounded-lg border border-gray-200">
+                        <summary
+                            class="font-semibold cursor-pointer text-gray-700 text-xs sm:text-sm hover:text-[#A37F64]">
+                            Raw Uploaded Document Content (for Debugging)
+                        </summary>
+                        <pre id="raw-file-content"
+                            class="mt-2 text-xs text-gray-600 whitespace-pre-wrap p-2 bg-gray-50 border border-gray-200 rounded-md overflow-x-auto"></pre>
+                    </details>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error View (Hidden by default) -->
+        <div id="error-view"
+            class="hidden flex-col items-center justify-center min-h-[50vh] sm:min-h-[60vh] bg-red-50 border border-red-200 text-red-700 rounded-lg shadow-inner p-4 sm:p-6">
+            <p class="text-base sm:text-lg font-medium mb-2 sm:mb-3">Error:</p>
+            <p id="error-message" class="text-center mb-4 sm:mb-5 text-xs sm:text-sm"></p>
+            <button id="try-again-btn"
+                class="bg-[#A37F64] hover:bg-[#8F6A53] text-white font-bold py-2 px-4 sm:px-5 rounded-xl shadow-lg transition duration-300 ease-in-out transform hover:scale-105 text-sm">
+                Try Again
+            </button>
+            <!-- Raw LLM Response for Invalid Input (for Debugging) -->
+            <div id="invalid-llm-response-container"
+                class="hidden bg-gray-100 p-2 sm:p-3 rounded-lg my-2 sm:my-3 border border-gray-200 w-full">
+                <details class="bg-gray-100 p-2 rounded-lg border border-gray-200">
+                    <summary class="font-semibold cursor-pointer text-gray-700 text-xs sm:text-sm hover:text-[#A37F64]">
+                        Raw LLM Response (for Invalid Input)
+                    </summary>
+                    <div id="raw-llm-response"
+                        class="mt-2 text-xs text-gray-600 whitespace-pre-wrap p-2 bg-gray-50 border border-gray-200 rounded-md overflow-x-auto">
+                    </div>
+                </details>
+            </div>
+        </div>
+
+        <!-- Floating Print Button -->
+        <button id="floating-print-btn"
+            class="fixed bottom-6 right-6 w-14 h-14 bg-[#A37F64] hover:bg-[#8F6A53] text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 print:hidden z-50 hidden"
+            title="Print Analysis Results" aria-label="Print Analysis Results">
+            <svg class="w-6 h-6 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z">
+                </path>
+            </svg>
+        </button>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-[#EFEAE6] py-3 sm:py-4">
+        <div class="container mx-auto px-3 sm:px-4 text-center text-gray-600 text-xs">
+            <div class="flex flex-col items-center mb-2">
+                <p class="text-sm font-semibold text-gray-700 mb-1">PolicyReview AI</p>
+                <!-- Replace with your own logo and company information -->
+                <!-- <a href="https://your-website.com" target="_blank" rel="noopener noreferrer">
+                    <img src="your-logo.png" alt="Your Company Logo" class="h-10 object-contain mx-auto">
+                </a> -->
+            </div>
+            <p class="mb-2">Open source insurance policy analysis tool</p>
+            <p>
+                <a href="https://github.com/hugosvent/life_insurance_reviewer" target="_blank" rel="noopener noreferrer"
+                    class="text-[#A37F64] hover:text-[#8F6A53] font-semibold underline">
+                    View on GitHub
+                </a>
+            </p>
+            <p class="mt-2 text-xs">© 2025 Expertition360. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Privacy Policy Modal -->
+    <div id="privacy-modal" class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
+        <div
+            class="bg-white p-4 sm:p-6 rounded-lg shadow-xl w-full max-w-md sm:max-w-lg mx-3 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg sm:text-xl font-semibold text-gray-800">Privacy & Data Usage</h3>
+            </div>
+
+            <div class="text-sm sm:text-base text-gray-700 space-y-4">
+                <p class="font-medium text-gray-800">How we handle your data:</p>
+
+                <div class="bg-blue-50 border-l-4 border-blue-400 p-3 rounded">
+                    <div class="flex items-start">
+                        <svg class="w-5 h-5 text-blue-400 mt-0.5 mr-2 flex-shrink-0" fill="currentColor"
+                            viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                                clip-rule="evenodd"></path>
+                        </svg>
+                        <div>
+                            <p class="font-medium text-blue-800">Document Processing</p>
+                            <p class="text-blue-700 text-sm">Your uploaded documents are securely transmitted to our
+                                cloud server and processed by third-party AI models. <strong>No documents are stored or
+                                    persisted anywhere.</strong></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-green-50 border-l-4 border-green-400 p-3 rounded">
+                    <div class="flex items-start">
+                        <svg class="w-5 h-5 text-green-400 mt-0.5 mr-2 flex-shrink-0" fill="currentColor"
+                            viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                clip-rule="evenodd"></path>
+                        </svg>
+                        <div>
+                            <p class="font-medium text-green-800">Privacy Protection</p>
+                            <p class="text-green-700 text-sm">We do not collect, use, or store any personal information.
+                                Your privacy is fully protected.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded">
+                    <div class="flex items-start">
+                        <svg class="w-5 h-5 text-yellow-400 mt-0.5 mr-2 flex-shrink-0" fill="currentColor"
+                            viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                                clip-rule="evenodd"></path>
+                        </svg>
+                        <div>
+                            <p class="font-medium text-yellow-800">Important Note</p>
+                            <p class="text-yellow-700 text-sm">Only upload documents you're comfortable sharing for
+                                analysis. Avoid uploading documents with sensitive personal information beyond what's
+                                necessary for policy review.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="text-xs text-gray-500 mt-4">
+                    By continuing to use this service, you acknowledge that you understand and agree to these data
+                    handling practices.
+                </p>
+            </div>
+
+            <div class="flex flex-col sm:flex-row sm:justify-end gap-2 mt-6">
+                <button id="privacy-decline-btn"
+                    class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded-lg transition duration-300 order-2 sm:order-1">
+                    Decline
+                </button>
+                <button id="privacy-accept-btn"
+                    class="bg-[#A37F64] hover:bg-[#8F6A53] text-white font-medium py-2 px-4 rounded-lg transition duration-300 order-1 sm:order-2">
+                    Accept & Continue
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Password Prompt Modal -->
+    <div id="password-modal"
+        class="hidden fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-white p-4 sm:p-6 rounded-lg shadow-xl w-full max-w-xs sm:max-w-sm mx-3 text-center">
+            <h3 class="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-gray-800">Password Required</h3>
+            <p class="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">This PDF is encrypted. Please enter the password:
+            </p>
+            <input type="password" id="pdf-password-input"
+                class="w-full p-2 border border-gray-300 rounded-md mb-3 sm:mb-4 focus:ring-[#A37F64] focus:border-[#A37F64]"
+                placeholder="Enter password">
+            <div class="flex flex-col sm:flex-row sm:justify-center gap-2">
+                <button id="submit-password-btn"
+                    class="bg-[#A37F64] hover:bg-[#8F6A53] text-white font-bold py-2 px-4 rounded-xl transition duration-300">Submit</button>
+                <button id="cancel-password-btn"
+                    class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-xl transition duration-300">Cancel</button>
+            </div>
+            <p id="password-error-message" class="text-red-500 text-xs sm:text-sm mt-3 hidden"></p>
+        </div>
+    </div>
+
+    <!-- PDF.js Library -->
+    <script type="module">
+        import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.3.31/pdf.min.mjs';
+
+        // Configure worker source - use the .mjs worker file
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.3.31/pdf.worker.min.mjs';
+
+        // Make pdfjsLib globally available for the rest of your code
+        window.pdfjsLib = pdfjsLib;
+
+        console.log('PDF.js loaded and configured successfully');
+        console.log('Worker source:', pdfjsLib.GlobalWorkerOptions.workerSrc);
+    </script>
+
+    <!-- Tesseract.js Library -->
+    <script src='https://cdn.jsdelivr.net/npm/tesseract.js@6/dist/tesseract.min.js'></script>
+</body>
+
+<!-- Load configuration, then API script -->
+
+<script src="config.js"></script>
+<script src="api.js"></script>
+
+</html>

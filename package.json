@@ -1,0 +1,29 @@
+{
+  "name": "insurance-policy-reviewer",
+  "version": "1.0.0",
+  "description": "AI-powered insurance policy analyzer and comparison tool",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [
+    "insurance",
+    "policy",
+    "analyzer",
+    "ai",
+    "comparison"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "multer": "^1.4.5-lts.1",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
