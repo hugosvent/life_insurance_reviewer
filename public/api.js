@@ -470,7 +470,7 @@ async function handleMultipleFileUploadProcess(files, password = null) {
         console.error("Overall error during file processing or LLM call:", error);
         if (error.message.includes('Password required')) {
             passwordErrorMessage.textContent = error.message;
-            passwordModal.classList.remove('hidden');
+            showPasswordModal();
             setView('processing');
         } else {
             errorMessageP.textContent = `An overall error occurred: ${error.message}. Please try again. For complex PDFs (e.g., scanned documents), a backend OCR service is recommended for optimal results due to client-side limitations.`;
@@ -600,7 +600,7 @@ async function analyzeWithLLM(fileContent, language) {
         console.error("Overall error during file processing or LLM call:", error);
         if (error.message === 'Password required') {
             passwordErrorMessage.textContent = 'This PDF requires a password.';
-            passwordModal.classList.remove('hidden');
+            showPasswordModal();
             setView('processing');
         } else {
             errorMessageP.textContent = `An overall error occurred: ${error.message}. Please try again. For complex PDFs (e.g., scanned documents), a backend OCR service is recommended for optimal results due to client-side limitations.`;
@@ -870,6 +870,42 @@ function handlePrivacyDecline() {
     alert('You must accept the privacy policy to use this service.');
 }
 
+// Password modal handling functions
+function handlePasswordSubmit() {
+    const password = pdfPasswordInput.value.trim();
+    if (!password) {
+        passwordErrorMessage.textContent = 'Please enter a password.';
+        passwordErrorMessage.classList.remove('hidden');
+        return;
+    }
+    
+    // Hide the modal and retry processing with the password
+    hidePasswordModal();
+    
+    // Retry the file processing with the provided password
+    if (currentFiles && currentFiles.length > 0) {
+        handleMultipleFileUploadProcess(currentFiles, password);
+    }
+}
+
+function handlePasswordCancel() {
+    hidePasswordModal();
+    setView('upload');
+}
+
+function showPasswordModal() {
+    passwordModal.classList.remove('hidden');
+    pdfPasswordInput.value = '';
+    passwordErrorMessage.classList.add('hidden');
+    pdfPasswordInput.focus();
+}
+
+function hidePasswordModal() {
+    passwordModal.classList.add('hidden');
+    pdfPasswordInput.value = '';
+    passwordErrorMessage.classList.add('hidden');
+}
+
 // Make removeFile function globally available
 window.removeFile = removeFile;
 
@@ -879,6 +915,17 @@ document.addEventListener('DOMContentLoaded', () => {
     privacyAcceptBtn.addEventListener('click', handlePrivacyAccept);
     privacyDeclineBtn.addEventListener('click', handlePrivacyDecline);
     checkPrivacyConsent();
+
+    // Event listeners for password modal
+    submitPasswordBtn.addEventListener('click', handlePasswordSubmit);
+    cancelPasswordBtn.addEventListener('click', handlePasswordCancel);
+    
+    // Allow Enter key to submit password
+    pdfPasswordInput.addEventListener('keypress', (event) => {
+        if (event.key === 'Enter') {
+            handlePasswordSubmit();
+        }
+    });
 
     tryAgainBtn.addEventListener('click', () => {
         window.location.reload();
