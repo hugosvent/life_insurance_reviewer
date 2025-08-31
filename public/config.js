@@ -112,7 +112,4 @@ if (typeof module !== 'undefined' && module.exports) {
     window.API_CONFIG = API_CONFIG;
     window.OCR_CONFIG = OCR_CONFIG;
     window.UI_CONFIG = UI_CONFIG;
-    
-    // Legacy support for FRONTEND_ENV
-    window.FRONTEND_ENV = FRONTEND_CONFIG;
 }
