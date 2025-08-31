@@ -487,12 +487,9 @@ async function analyzeWithLLM(fileContent, language) {
         
         multiModelResultsDiv.innerHTML = `
                     <div class="bg-blue-50 p-3 rounded-lg my-3 border border-blue-200">
-                        <div id="thought-process-container" class="mb-4">
-                            <div class="flex items-center bg-gray-100 p-3 rounded-lg border border-gray-200">
-                                <div class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-[#A37F64] mr-2"></div>
-                                <h4 class="font-semibold text-gray-700 text-sm">AI Analyzing Document...</h4>
-                            </div>
-                            <div id="thought-content" class="thought-content-fixed mt-2 text-xs text-gray-600 space-y-2 p-3 bg-gray-50 rounded-b-lg border-l border-r border-b border-gray-200"></div>
+                        <div class="flex items-center bg-gray-100 p-3 rounded-lg border border-gray-200 mb-4">
+                            <div class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-[#A37F64] mr-2"></div>
+                            <h4 class="font-semibold text-gray-700 text-sm">AI Analyzing Document...</h4>
                         </div>
                         <div class="mt-2 text-xs text-gray-600 space-y-2 prose max-w-none" id="streaming-content">
                             <p>Preparing analysis...</p>
@@ -501,13 +498,7 @@ async function analyzeWithLLM(fileContent, language) {
                 `;
 
         const streamingContent = document.getElementById('streaming-content');
-        const thoughtContent = document.getElementById('thought-content');
-        const thoughtContainer = document.getElementById('thought-process-container');
-
         let accumulatedContent = "";
-        let thinkContent = "";
-        let inThinkBlock = false;
-        let thinkingComplete = false;
 
         const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ANALYZE_POLICY}`, {
             method: 'POST',
@@ -532,64 +523,18 @@ async function analyzeWithLLM(fileContent, language) {
         // Set view to analysis to show streaming content
         setView('analysis');
 
-        // Process the stream
+        // Process the stream - handling plain text from OpenAI package
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
 
-            // Decode the chunk and process it
-            const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split('\n');
+            // Decode the chunk and process it as plain text
+            const content = decoder.decode(value, { stream: true });
 
-            for (const line of lines) {
-                if (line.trim() === '' || !line.startsWith('data: ')) continue;
-
-                const data = line.substring(6); // Remove 'data: ' prefix
-
-                if (data === '[DONE]') continue;
-
-                try {
-                    const parsed = JSON.parse(data);
-                    const content = parsed.choices[0].delta.content || "";
-
-                    if (content) {
-                        // Handle thought process markers and content streaming
-                        if (content.includes('<think>')) {
-                            inThinkBlock = true;
-                            const thinkStart = content.indexOf('<think>') + 7;
-                            thinkContent = content.substring(thinkStart);
-                            updateThoughtContent(thoughtContent, thinkContent);
-                        } else if (content.includes('</think>')) {
-                            inThinkBlock = false;
-                            thinkingComplete = true;
-                            const thinkEnd = content.indexOf('</think>');
-                            if (thinkEnd > 0) {
-                                thinkContent = content.substring(0, thinkEnd);
-                                updateThoughtContent(thoughtContent, thinkContent);
-                            }
-
-                            createCollapsibleThoughtElement(thoughtContainer, thoughtContent);
-
-                            if (thinkEnd + 8 < content.length) {
-                                accumulatedContent += content.substring(thinkEnd + 8);
-                                streamingContent.innerHTML = accumulatedContent;
-                            }
-                        } else if (inThinkBlock) {
-                            thinkContent += content;
-                            updateThoughtContent(thoughtContent, thinkContent);
-                        } else {
-                            accumulatedContent += content;
-                            streamingContent.innerHTML = accumulatedContent;
-                        }
-                    }
-                } catch (error) {
-                    console.error("Error parsing chunk:", error, data);
-                }
+            if (content) {
+                accumulatedContent += content;
+                streamingContent.innerHTML = accumulatedContent;
             }
-        }
-
-        if (!thinkingComplete) {
-            thoughtContainer.classList.add('hidden');
         }
 
         if (accumulatedContent.includes('Invalid insurance policy input.')) {
@@ -618,12 +563,9 @@ async function compareWithLLM(fileContents, language) {
         
         multiModelResultsDiv.innerHTML = `
             <div class="bg-blue-50 p-3 rounded-lg my-3 border border-blue-200">
-                <div id="thought-process-container" class="mb-4">
-                    <div class="flex items-center bg-gray-100 p-3 rounded-lg border border-gray-200">
-                        <div class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-[#A37F64] mr-2"></div>
-                        <h4 class="font-semibold text-gray-700 text-sm">AI Comparing Policies...</h4>
-                    </div>
-                    <div id="thought-content" class="thought-content-fixed mt-2 text-xs text-gray-600 space-y-2 p-3 bg-gray-50 rounded-b-lg border-l border-r border-b border-gray-200"></div>
+                <div class="flex items-center bg-gray-100 p-3 rounded-lg border border-gray-200 mb-4">
+                    <div class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-[#A37F64] mr-2"></div>
+                    <h4 class="font-semibold text-gray-700 text-sm">AI Comparing Policies...</h4>
                 </div>
                 <div class="mt-2 text-xs text-gray-600 space-y-2 prose max-w-none" id="streaming-content">
                     <p>Preparing comparison...</p>
@@ -632,13 +574,7 @@ async function compareWithLLM(fileContents, language) {
         `;
 
         const streamingContent = document.getElementById('streaming-content');
-        const thoughtContent = document.getElementById('thought-content');
-        const thoughtContainer = document.getElementById('thought-process-container');
-
         let accumulatedContent = "";
-        let thinkContent = "";
-        let inThinkBlock = false;
-        let thinkingComplete = false;
 
         const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.COMPARE_POLICY}`, {
             method: 'POST',
@@ -663,64 +599,18 @@ async function compareWithLLM(fileContents, language) {
         // Set view to analysis to show streaming content
         setView('analysis');
 
-        // Process the stream (similar to analyzeWithLLM)
+        // Process the stream - handling plain text from OpenAI package
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
 
-            // Decode the chunk and process it
-            const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split('\n');
+            // Decode the chunk and process it as plain text
+            const content = decoder.decode(value, { stream: true });
 
-            for (const line of lines) {
-                if (line.trim() === '' || !line.startsWith('data: ')) continue;
-
-                const data = line.substring(6); // Remove 'data: ' prefix
-
-                if (data === '[DONE]') continue;
-
-                try {
-                    const parsed = JSON.parse(data);
-                    const content = parsed.choices[0].delta.content || "";
-
-                    if (content) {
-                        // Handle thought process markers and content streaming
-                        if (content.includes('<think>')) {
-                            inThinkBlock = true;
-                            const thinkStart = content.indexOf('<think>') + 7;
-                            thinkContent = content.substring(thinkStart);
-                            updateThoughtContent(thoughtContent, thinkContent);
-                        } else if (content.includes('</think>')) {
-                            inThinkBlock = false;
-                            thinkingComplete = true;
-                            const thinkEnd = content.indexOf('</think>');
-                            if (thinkEnd > 0) {
-                                thinkContent = content.substring(0, thinkEnd);
-                                updateThoughtContent(thoughtContent, thinkContent);
-                            }
-
-                            createCollapsibleThoughtElement(thoughtContainer, thoughtContent);
-
-                            if (thinkEnd + 8 < content.length) {
-                                accumulatedContent += content.substring(thinkEnd + 8);
-                                streamingContent.innerHTML = accumulatedContent;
-                            }
-                        } else if (inThinkBlock) {
-                            thinkContent += content;
-                            updateThoughtContent(thoughtContent, thinkContent);
-                        } else {
-                            accumulatedContent += content;
-                            streamingContent.innerHTML = accumulatedContent;
-                        }
-                    }
-                } catch (error) {
-                    console.error("Error parsing chunk:", error, data);
-                }
+            if (content) {
+                accumulatedContent += content;
+                streamingContent.innerHTML = accumulatedContent;
             }
-        }
-
-        if (!thinkingComplete) {
-            thoughtContainer.classList.add('hidden');
         }
 
         if (accumulatedContent.includes('Invalid insurance policy input.')) {
@@ -737,46 +627,7 @@ async function compareWithLLM(fileContents, language) {
 }
 
 // Helper function to update thought content
-function updateThoughtContent(thoughtContent, content) {
-    thoughtContent.innerHTML = '';
-    const lines = content.split('\n');
-    for (const line of lines) {
-        if (line.trim()) {
-            const p = document.createElement('p');
-            p.textContent = line;
-            p.className = 'mb-1';
-            thoughtContent.appendChild(p);
-        }
-    }
-    // Auto-scroll to the bottom
-    thoughtContent.scrollTop = thoughtContent.scrollHeight;
-}
 
-// Helper function to create collapsible thought element
-function createCollapsibleThoughtElement(container, thoughtContent) {
-    // Create disclaimer element
-    const disclaimerElement = document.createElement('div');
-    disclaimerElement.className = 'bg-yellow-50 p-3 rounded-lg border border-yellow-200 mb-3 text-xs text-gray-700';
-    disclaimerElement.innerHTML = '<strong>Disclaimer:</strong> The results are generated by AI and should not be fully relied upon for deterministic decisions. Please double check and confirm all information before making any decisions based on this analysis.';
-
-    const detailsElement = document.createElement('details');
-    detailsElement.className = 'bg-gray-100 p-3 rounded-lg border border-gray-200';
-
-    const summaryElement = document.createElement('summary');
-    summaryElement.className = 'font-semibold cursor-pointer text-gray-700 hover:text-[#A37F64] text-sm';
-    summaryElement.textContent = 'Thought Process / Internal Analysis (Click to expand)';
-
-    const contentDiv = document.createElement('div');
-    contentDiv.className = 'thought-content-fixed mt-2 text-xs text-gray-600 space-y-2';
-    contentDiv.innerHTML = thoughtContent.innerHTML;
-
-    detailsElement.appendChild(summaryElement);
-    detailsElement.appendChild(contentDiv);
-
-    container.innerHTML = '';
-    container.appendChild(disclaimerElement); // Add disclaimer first
-    container.appendChild(detailsElement);    // Then add the collapsible element
-}
 
 // Updated event listeners
 fileUploadInput.addEventListener('change', (event) => {

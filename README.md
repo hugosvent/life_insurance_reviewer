@@ -13,6 +13,7 @@ Try the live demo at: https://insurance.expertition360.com
 - **Multi-language Support**: Analysis available in multiple languages
 - **PDF Processing**: Handles both text-based and scanned PDFs with OCR
 - **Streaming Responses**: Real-time AI analysis with streaming output
+- **OpenAI Integration**: Built with the official OpenAI SDK for reliable API communication
 - **Responsive Design**: Mobile-friendly interface
 
 ## Project Structure
@@ -70,29 +71,43 @@ SSL_CERT_PATH=/path/to/your/certificate.pem
 # OpenAI-compatible API Configuration
 # Choose one of the following providers:
 
-# DeepInfra (default)
-API_KEY=your_deepinfra_api_key_here
-API_URL=https://api.deepinfra.com/v1/openai/chat/completions
-MODEL_ID=meta-llama/Meta-Llama-3.1-70B-Instruct
+# OpenAI (recommended)
+API_KEY=your_openai_api_key_here
+API_URL=https://api.openai.com/v1
+MODEL_ID=gpt-4
 
-# OpenAI
-# API_KEY=your_openai_api_key_here
-# API_URL=https://api.openai.com/v1/chat/completions
-# MODEL_ID=gpt-4
+# DeepInfra
+# API_KEY=your_deepinfra_api_key_here
+# API_URL=https://api.deepinfra.com/v1/openai
+# MODEL_ID=meta-llama/Meta-Llama-3.1-70B-Instruct
 
 # Groq
 # API_KEY=your_groq_api_key_here
-# API_URL=https://api.groq.com/openai/v1/chat/completions
+# API_URL=https://api.groq.com/openai/v1
 # MODEL_ID=llama-3.1-70b-versatile
+
+# Google Gemini (via DeepInfra)
+# API_KEY=your_deepinfra_api_key_here
+# API_URL=https://api.deepinfra.com/v1/openai
+# MODEL_ID=google/gemini-2.5-flash
 
 
 ```
 
 ### 2. Install Dependencies
 
+Install all required dependencies including the OpenAI SDK:
+
 ```bash
 npm install
 ```
+
+Key dependencies:
+- `openai`: Official OpenAI SDK for API communication
+- `express`: Web framework for Node.js
+- `multer`: Middleware for handling file uploads
+- `cors`: Cross-origin resource sharing middleware
+- `dotenv`: Environment variable management
 
 ### 3. SSL Certificates
 
@@ -170,8 +185,8 @@ This approach provides complete control over frontend behavior without requiring
 | `SSL_KEY_PATH` | Path to SSL private key | - | Yes (when HTTPS enabled) |
 | `SSL_CERT_PATH` | Path to SSL certificate | - | Yes (when HTTPS enabled) |
 | `API_KEY` | OpenAI-compatible API key (DeepInfra, OpenAI, Groq, etc.) | - | Yes |
-| `API_URL` | OpenAI-compatible API endpoint | `https://api.deepinfra.com/v1/openai/chat/completions` | No |
-| `MODEL_ID` | AI model identifier | `meta-llama/Meta-Llama-3.1-70B-Instruct` | No |
+| `API_URL` | OpenAI-compatible API endpoint | `https://api.openai.com/v1` | No |
+| `MODEL_ID` | AI model identifier | `gpt-4` | No |
 | `FRONTEND_API_URL` | Production API URL for frontend | `https://your-production-domain.com` | No |
 | `FRONTEND_DEV_API_URL` | Development API URL for frontend | `https://localhost:3000` | No |
 
@@ -202,6 +217,32 @@ npm run dev
 2. **Frontend**: Update `public/api.js` for new functionality and `public/config.js` for configuration
 3. **Configuration**: Add new environment variables to `.env.example` and update this README
 
+### OpenAI SDK Integration
+
+The application uses the official OpenAI SDK (`openai` package) for API communication:
+
+- **Stream Processing**: Utilizes OpenAI's streaming capabilities for real-time response delivery
+- **Error Handling**: Built-in error handling and retry mechanisms
+- **Type Safety**: TypeScript definitions for better development experience
+- **Compatibility**: Works with OpenAI and OpenAI-compatible APIs (DeepInfra, Groq, etc.)
+
+#### Usage Example
+
+```javascript
+import OpenAI from 'openai';
+
+const openai = new OpenAI({
+  apiKey: process.env.API_KEY,
+  baseURL: process.env.API_URL
+});
+
+const stream = await openai.chat.completions.create({
+  model: process.env.MODEL_ID,
+  messages: [{ role: 'user', content: 'Analyze this policy...' }],
+  stream: true
+});
+```
+
 ### Code Organization
 
 - **Modular Structure**: Code is organized into logical modules for maintainability
@@ -229,12 +270,39 @@ curl -X POST http://localhost:3000/api/analyze-policy \
 
 1. **SSL Certificate Errors**: Ensure SSL paths are absolute and certificates are valid
 2. **API Key Issues**: Verify your API key is correct and has sufficient credits
-3. **Port Already in Use**: Change the `SERVER_PORT` in your `.env` file
+3. **Port Already in Use**: Change the `PORT` in your `.env` file
 4. **File Upload Errors**: Check file size limits and ensure files are valid PDFs
+5. **OpenAI SDK Errors**: Ensure your `API_URL` is correctly formatted (without `/chat/completions` suffix)
+6. **Model Not Found**: Verify the `MODEL_ID` is supported by your chosen API provider
 
 ### Debug Mode
 
 Enable debug logging by setting `NODE_ENV=development` in your environment.
+
+### OpenAI Package Configuration
+
+The application uses the official OpenAI SDK which requires specific configuration:
+
+- **Base URL Format**: Use base URLs without the `/chat/completions` suffix (e.g., `https://api.openai.com/v1`)
+- **API Key**: Ensure your API key has the correct permissions for chat completions
+- **Model Compatibility**: Verify your chosen model supports streaming responses
+- **Rate Limits**: Be aware of rate limits imposed by your API provider
+
+#### Switching API Providers
+
+To switch between different OpenAI-compatible providers, update your `.env` file:
+
+```bash
+# For OpenAI
+API_KEY=sk-your-openai-key
+API_URL=https://api.openai.com/v1
+MODEL_ID=gpt-4
+
+# For DeepInfra
+API_KEY=your-deepinfra-key
+API_URL=https://api.deepinfra.com/v1/openai
+MODEL_ID=meta-llama/Meta-Llama-3.1-70B-Instruct
+```
 
 ## Deployment
 
@@ -246,6 +314,39 @@ Enable debug logging by setting `NODE_ENV=development` in your environment.
 4. **File Uploads**: Consider implementing additional file validation and virus scanning
 5. **Rate Limiting**: Implement rate limiting for API endpoints
 6. **Monitoring**: Add logging and monitoring for production use
+
+## Technical Architecture
+
+The application follows a clean, simplified architecture:
+
+### Backend Structure
+
+- **`server.js`**: Main application entry point with Express server setup
+- **`src/services/aiService.js`**: OpenAI SDK integration for AI analysis
+- **`src/routes/policyRoutes.js`**: API endpoints for policy analysis and comparison
+- **`src/middleware/`**: Custom middleware for request processing
+
+### Frontend Structure
+
+- **`public/api.js`**: Main frontend logic with streaming response handling
+- **`public/config.js`**: Frontend configuration management
+- **`public/index.html`**: Single-page application interface
+
+### Key Design Decisions
+
+1. **Simplified Streaming**: Direct OpenAI stream processing without complex reasoning extraction
+2. **Official SDK**: Uses the official OpenAI package for reliable API communication
+3. **Provider Agnostic**: Supports multiple OpenAI-compatible API providers
+4. **Real-time Updates**: Streaming responses for immediate user feedback
+5. **Clean Architecture**: Separation of concerns between services, routes, and frontend
+
+### Data Flow
+
+1. User uploads PDF or enters text
+2. Frontend processes file and sends to backend API
+3. Backend uses OpenAI SDK to create streaming completion
+4. Response streams directly to frontend for real-time display
+5. No intermediate processing or reasoning extraction
 
 ## Contributing
 

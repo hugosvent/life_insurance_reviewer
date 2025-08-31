@@ -1,58 +1,42 @@
+import OpenAI from 'openai';
 import { config } from '../config/config.js';
 import { getSystemPrompt, getCompareSystemPrompt, stylingPrompt, accuracyGuidelines } from '../prompts/prompts.js';
 
-/**
- * Make a request to the OpenAI-compatible API
- * @param {Object} payload - The request payload
- * @returns {Promise<Response>} The API response
- */
-async function makeApiRequest(payload) {
-  const response = await fetch(config.api.apiUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${config.api.apiKey}`
-    },
-    body: JSON.stringify(payload)
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(`API Error: ${response.status} ${response.statusText} - ${errorData.error ? errorData.error.message : 'Unknown error'}`);
-  }
-
-  return response;
-}
+// Initialize OpenAI client
+const openai = new OpenAI({
+  apiKey: config.api.apiKey,
+  baseURL: config.api.apiUrl
+});
 
 /**
  * Analyze a single insurance policy
  * @param {string} fileContent - The policy content to analyze
  * @param {string} language - The target language for analysis
- * @returns {Promise<Response>} The streaming API response
+ * @returns {Promise<Stream>} OpenAI stream
  */
 export async function analyzePolicyWithAI(fileContent, language) {
   const systemPrompt = getSystemPrompt(language);
   
-  const payload = {
+  const stream = await openai.chat.completions.create({
     model: config.api.modelId,
     temperature: config.ai.analyzeTemperature,
     messages: [
       {
         role: "user",
-        content: `${accuracyGuidelines} \n ${stylingPrompt} \n ${systemPrompt}\ n Please analyze this insurance policy content:\n\n${fileContent}`
+        content: `${accuracyGuidelines} \n ${stylingPrompt} \n ${systemPrompt}\n Please analyze this insurance policy content:\n\n${fileContent}`
       }
     ],
     stream: true,
-  };
+  });
 
-  return await makeApiRequest(payload);
+  return stream;
 }
 
 /**
  * Compare multiple insurance policies
  * @param {Array} policyContents - Array of policy objects with name and content
  * @param {string} language - The target language for comparison
- * @returns {Promise<Response>} The streaming API response
+ * @returns {Promise<Stream>} OpenAI stream
  */
 export async function comparePoliciesWithAI(policyContents, language) {
   const compareSystemPrompt = getCompareSystemPrompt(language);
@@ -62,7 +46,7 @@ export async function comparePoliciesWithAI(policyContents, language) {
     `### Policy ${index + 1}: ${policy.name}\n\n${policy.content}\n\n---\n\n`
   ).join('');
 
-  const payload = {
+  const stream = await openai.chat.completions.create({
     model: config.api.modelId,
     temperature: config.ai.compareTemperature,
     messages: [
@@ -72,7 +56,7 @@ export async function comparePoliciesWithAI(policyContents, language) {
       }
     ],
     stream: true,
-  };
+  });
 
-  return await makeApiRequest(payload);
+  return stream;
 }

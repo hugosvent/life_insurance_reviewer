@@ -18,19 +18,20 @@ function setupStreamingHeaders(res) {
 
 /**
  * Stream API response to client
- * @param {Response} apiResponse - API response from AI service
+ * @param {Stream} stream - OpenAI stream
  * @param {Response} res - Express response object
  */
-async function streamResponse(apiResponse, res) {
-  const reader = apiResponse.body.getReader();
-  const decoder = new TextDecoder("utf-8");
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-
-    const chunk = decoder.decode(value, { stream: true });
-    res.write(chunk);
+async function streamResponse(stream, res) {
+  try {
+    for await (const chunk of stream) {
+      const content = chunk.choices[0]?.delta?.content || '';
+      if (content) {
+        res.write(content);
+      }
+    }
+  } catch (error) {
+    console.error('Error streaming response:', error);
+    res.write('\n\nError occurred while streaming response.');
   }
 
   res.end();
