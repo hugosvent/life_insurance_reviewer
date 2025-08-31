@@ -534,8 +534,20 @@ async function analyzeWithLLM(fileContent, language) {
             if (content) {
                 accumulatedContent += content;
                 streamingContent.innerHTML = accumulatedContent;
+                
+                // Auto-scroll to bottom of webpage during streaming
+                window.scrollTo(0, document.body.scrollHeight);
             }
         }
+
+        // Clear the loading indicator and show final content after streaming completes
+        multiModelResultsDiv.innerHTML = `
+            <div class="bg-blue-50 p-3 rounded-lg my-3 border border-blue-200">
+                <div class="mt-2 text-xs text-gray-600 space-y-2 prose max-w-none">
+                    ${accumulatedContent}
+                </div>
+            </div>
+        `;
 
         if (accumulatedContent.includes('Invalid insurance policy input.')) {
             throw new Error('Invalid insurance policy input detected by LLM.');
@@ -610,8 +622,20 @@ async function compareWithLLM(fileContents, language) {
             if (content) {
                 accumulatedContent += content;
                 streamingContent.innerHTML = accumulatedContent;
+                
+                // Auto-scroll to bottom of webpage during streaming
+                window.scrollTo(0, document.body.scrollHeight);
             }
         }
+
+        // Clear the loading indicator and show final content after streaming completes
+        multiModelResultsDiv.innerHTML = `
+            <div class="bg-blue-50 p-3 rounded-lg my-3 border border-blue-200">
+                <div class="mt-2 text-xs text-gray-600 space-y-2 prose max-w-none">
+                    ${accumulatedContent}
+                </div>
+            </div>
+        `;
 
         if (accumulatedContent.includes('Invalid insurance policy input.')) {
             throw new Error('Invalid insurance policy input detected by LLM.');
