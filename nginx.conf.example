@@ -1,0 +1,127 @@
+# Nginx configuration example for Insurance Policy Reviewer
+# This configuration ensures proper streaming support for AI responses
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name your-domain.com;
+    
+    # Redirect HTTP to HTTPS (optional but recommended)
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name your-domain.com;
+    
+    # SSL Configuration (replace with your certificate paths)
+    ssl_certificate /path/to/your/certificate.crt;
+    ssl_certificate_key /path/to/your/private.key;
+    
+    # SSL Security Settings
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384;
+    ssl_prefer_server_ciphers off;
+    
+    # General Settings
+    client_max_body_size 50M;  # Adjust based on your file upload needs
+    
+    # Streaming-specific configuration for API routes
+    location /api/ {
+        proxy_pass http://localhost:4316;  # Your Node.js app port
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # CRITICAL: Disable buffering for streaming responses
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_request_buffering off;
+        
+        # Streaming-specific headers
+        proxy_set_header X-Accel-Buffering no;
+        
+        # Timeout settings for long-running AI requests
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 300s;
+        proxy_read_timeout 300s;
+        
+        # Disable gzip compression for streaming routes
+        gzip off;
+    }
+    
+    # Static files (with compression enabled)
+    location / {
+        proxy_pass http://localhost:4316;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # Enable compression for static content
+        gzip on;
+        gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
+    }
+    
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "no-referrer-when-downgrade" always;
+    add_header Content-Security-Policy "default-src 'self' http: https: data: blob: 'unsafe-inline'" always;
+}
+
+# Alternative configuration for development/testing without SSL
+server {
+    listen 80;
+    server_name localhost;
+    
+    client_max_body_size 50M;
+    
+    # Streaming API routes
+    location /api/ {
+        proxy_pass http://localhost:4316;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        
+        # Disable buffering for streaming
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_request_buffering off;
+        proxy_set_header X-Accel-Buffering no;
+        
+        # Timeouts
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 300s;
+        proxy_read_timeout 300s;
+        
+        gzip off;
+    }
+    
+    # Static content
+    location / {
+        proxy_pass http://localhost:4316;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        
+        gzip on;
+    }
+}
+
+# Additional notes:
+# 1. Replace 'your-domain.com' with your actual domain
+# 2. Update SSL certificate paths
+# 3. Adjust the proxy_pass port (4316) if your app runs on a different port
+# 4. Test the configuration with: nginx -t
+# 5. Reload nginx after changes: systemctl reload nginx

@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import multer from 'multer';
+import compression from 'compression';
 import { config } from '../config/config.js';
 
 /**
@@ -8,8 +9,34 @@ import { config } from '../config/config.js';
  * @param {Express} app - Express application instance
  */
 export function setupMiddleware(app) {
-  // CORS middleware
-  app.use(cors());
+  // CORS middleware with streaming support
+  app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: false
+  }));
+  
+  // Compression middleware - exclude streaming routes
+  app.use(compression({
+    filter: (req, res) => {
+      // Don't compress streaming responses
+      if (req.path.includes('/analyze-policy') || req.path.includes('/compare-policy')) {
+        return false;
+      }
+      return compression.filter(req, res);
+    }
+  }));
+  
+  // Disable buffering for streaming routes
+  app.use((req, res, next) => {
+    if (req.path.includes('/analyze-policy') || req.path.includes('/compare-policy')) {
+      // Disable Express's internal buffering
+      res.setTimeout(0);
+      req.setTimeout(0);
+    }
+    next();
+  });
   
   // Body parsing middleware with increased limits
   const limit = `${config.upload.maxFileSizeMB}mb`;

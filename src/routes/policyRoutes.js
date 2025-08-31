@@ -10,10 +10,24 @@ const router = express.Router();
  * @param {Response} res - Express response object
  */
 function setupStreamingHeaders(res) {
-  res.setHeader('Content-Type', 'text/plain');
+  // Basic streaming headers
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
   res.setHeader('Transfer-Encoding', 'chunked');
-  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.setHeader('Connection', 'keep-alive');
+  
+  // Prevent buffering by reverse proxies (nginx, cloudflare, etc.)
+  res.setHeader('X-Accel-Buffering', 'no'); // nginx
+  res.setHeader('X-Proxy-Buffering', 'no'); // general proxy
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  
+  // Additional headers for better streaming support
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  
+  // Disable compression for this response
+  res.setHeader('Content-Encoding', 'identity');
 }
 
 /**
@@ -23,15 +37,22 @@ function setupStreamingHeaders(res) {
  */
 async function streamResponse(stream, res) {
   try {
+    // Send initial chunk to establish connection
+    res.write('');
+    res.flush && res.flush();
+    
     for await (const chunk of stream) {
       const content = chunk.choices[0]?.delta?.content || '';
       if (content) {
         res.write(content);
+        // Force flush the buffer to ensure immediate delivery
+        res.flush && res.flush();
       }
     }
   } catch (error) {
     console.error('Error streaming response:', error);
     res.write('\n\nError occurred while streaming response.');
+    res.flush && res.flush();
   }
 
   res.end();

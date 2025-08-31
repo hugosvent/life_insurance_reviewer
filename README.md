@@ -274,6 +274,7 @@ curl -X POST http://localhost:3000/api/analyze-policy \
 4. **File Upload Errors**: Check file size limits and ensure files are valid PDFs
 5. **OpenAI SDK Errors**: Ensure your `API_URL` is correctly formatted (without `/chat/completions` suffix)
 6. **Model Not Found**: Verify the `MODEL_ID` is supported by your chosen API provider
+7. **Streaming Not Working on VPS**: See the VPS Deployment section below for detailed solutions
 
 ### Debug Mode
 
@@ -303,6 +304,111 @@ API_KEY=your-deepinfra-key
 API_URL=https://api.deepinfra.com/v1/openai
 MODEL_ID=meta-llama/Meta-Llama-3.1-70B-Instruct
 ```
+
+### VPS Deployment and Streaming Issues
+
+If streaming responses work locally but not on your VPS, the issue is typically caused by reverse proxy buffering. Here are the solutions:
+
+#### Problem: Responses Come All at Once Instead of Streaming
+
+**Root Cause**: Reverse proxies (nginx, Apache, Cloudflare) buffer responses by default, which breaks streaming.
+
+**Solutions**:
+
+1. **Nginx Configuration** (Most Common)
+   
+   Use the provided `nginx.conf.example` file as a template. Key settings:
+   
+   ```nginx
+   location /api/ {
+       proxy_pass http://localhost:4316;
+       
+       # CRITICAL: Disable buffering
+       proxy_buffering off;
+       proxy_cache off;
+       proxy_request_buffering off;
+       proxy_set_header X-Accel-Buffering no;
+       
+       # Disable compression for streaming
+       gzip off;
+   }
+   ```
+
+2. **Apache Configuration**
+   
+   Add to your virtual host:
+   
+   ```apache
+   <Location "/api/">
+       ProxyPass http://localhost:4316/api/
+       ProxyPassReverse http://localhost:4316/api/
+       
+       # Disable buffering
+       ProxyPreserveHost On
+       SetEnv proxy-nokeepalive 1
+       SetEnv proxy-sendchunked 1
+   </Location>
+   ```
+
+3. **Cloudflare Settings**
+   
+   If using Cloudflare:
+   - Disable "Auto Minify" for JavaScript
+   - Set "Rocket Loader" to Off
+   - Consider using "Gray Cloud" (DNS only) for API subdomain
+
+4. **Application-Level Fixes** (Already Implemented)
+   
+   The application now includes:
+   - Comprehensive streaming headers (`X-Accel-Buffering: no`)
+   - Disabled compression for streaming routes
+   - Forced buffer flushing
+   - Proper CORS configuration
+
+#### Testing Streaming on VPS
+
+1. **Direct Connection Test**:
+   ```bash
+   curl -X POST http://your-vps-ip:4316/api/analyze-policy \
+     -H "Content-Type: application/json" \
+     -d '{"text":"Test policy content","language":"en"}' \
+     --no-buffer
+   ```
+
+2. **Through Reverse Proxy Test**:
+   ```bash
+   curl -X POST https://your-domain.com/api/analyze-policy \
+     -H "Content-Type: application/json" \
+     -d '{"text":"Test policy content","language":"en"}' \
+     --no-buffer
+   ```
+
+3. **Check Response Headers**:
+   ```bash
+   curl -I https://your-domain.com/api/analyze-policy
+   ```
+   
+   Look for:
+   - `Transfer-Encoding: chunked`
+   - `X-Accel-Buffering: no`
+   - `Cache-Control: no-cache`
+
+#### Quick Fixes Checklist
+
+- [ ] Updated to latest application code with streaming fixes
+- [ ] Configured reverse proxy to disable buffering
+- [ ] Disabled compression for `/api/` routes
+- [ ] Set appropriate timeout values (300s+)
+- [ ] Tested direct connection to Node.js app
+- [ ] Verified API key and model availability
+- [ ] Checked server logs for errors
+
+#### Environment-Specific Notes
+
+**DigitalOcean/Linode/AWS**: Usually nginx-related buffering issues
+**Cloudflare**: May require DNS-only mode for API endpoints
+**Shared Hosting**: May not support streaming; consider VPS upgrade
+**Docker**: Ensure container networking doesn't buffer responses
 
 ## Deployment
 
